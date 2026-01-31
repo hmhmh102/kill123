@@ -13,20 +13,14 @@ if getgenv().AutoKillLoaded then return end
 getgenv().AutoKillLoaded = true
 
 -- VARIABLES
-local Character, Humanoid, Hand, Punch, Animator
-local LastAttack, LastRespawn, LastCheck = 0, 0, 0
+local Character, Humanoid, Hand, Punch
+local LastAttack, LastRespawn = 0, 0
 local Running = true
 local StartTime = os.time()
 
-local WhitelistFriends = true
-local KillOnlyWeaker = true
-
 -- SERVER HOP SETTINGS
-local LastServerHop = 0
 local ServerHopInterval = 60 -- seconds
-
-getgenv().WhitelistedPlayers = getgenv().WhitelistedPlayers or {}
-getgenv().TempWhitelistStronger = getgenv().TempWhitelistStronger or {}
+getgenv().LastServerHop = getgenv().LastServerHop or tick()
 
 -- SERVER HOP FUNCTION
 local function ServerHop()
@@ -37,7 +31,7 @@ local function ServerHop()
     while true do
         local Url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
         if Cursor ~= "" then
-            Url ..= "&cursor=" .. Cursor
+            Url = Url .. "&cursor=" .. Cursor
         end
 
         local Success, Response = pcall(function()
@@ -56,40 +50,8 @@ local function ServerHop()
         else
             break
         end
-        task.wait(0.4)
+        task.wait(0.5)
     end
-end
-
--- BLOCKED ANIMS
-local BlockedAnimations = {
-    ["rbxassetid://3638729053"] = true,
-    ["rbxassetid://3638749874"] = true,
-    ["rbxassetid://3638767427"] = true,
-    ["rbxassetid://102357151005774"] = true
-}
-
--- UTILS
-local function GetPlayerStatValue(Player, Names)
-    if type(Names) == "string" then Names = {Names} end
-    for _, n in ipairs(Names) do
-        local v = Player:GetAttribute(n)
-        if v then return tonumber(v) end
-    end
-    local ls = Player:FindFirstChild("leaderstats")
-    if ls then
-        for _, n in ipairs(Names) do
-            local v = ls:FindFirstChild(n)
-            if v then return tonumber(v.Value) end
-        end
-    end
-end
-
-local function GetLocalPlayerDamage()
-    return GetPlayerStatValue(LocalPlayer, {"Damage","DMG","Attack","Strength","Str"}) or 1
-end
-
-local function GetTargetHealth(p)
-    return p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.MaxHealth or 100
 end
 
 -- UPDATE CHARACTER
@@ -102,14 +64,20 @@ local function UpdateAll()
     end
 end
 
+UpdateAll()
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    UpdateAll()
+end)
+
 -- MAIN LOOP
 RunService.RenderStepped:Connect(function()
     if not Running then return end
 
-    -- AUTO SERVER HOP
-    local Now = os.clock()
-    if Now - LastServerHop >= ServerHopInterval then
-        LastServerHop = Now
+    -- ✅ FIXED AUTO SERVER HOP
+    local Now = tick()
+    if Now - getgenv().LastServerHop >= ServerHopInterval then
+        getgenv().LastServerHop = Now
         ServerHop()
         return
     end
