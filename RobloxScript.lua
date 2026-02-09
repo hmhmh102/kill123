@@ -1,4 +1,4 @@
--- SERVICES
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -8,21 +8,20 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
--- ANTI DOUBLE LOAD
+
 if getgenv().AutoKillLoaded then return end
 getgenv().AutoKillLoaded = true
 
--- VARIABLES
+
 local Character, Humanoid, Hand, Punch
 local LastAttack, LastRespawn = 0, 0
 local Running = true
 local StartTime = os.time()
 
--- SERVER HOP SETTINGS
-local ServerHopInterval = 60 -- seconds
+
+local ServerHopInterval = 60 
 getgenv().LastServerHop = getgenv().LastServerHop or tick()
 
--- SERVER HOP FUNCTION
 local function ServerHop()
     local PlaceId = game.PlaceId
     local JobId = game.JobId
@@ -54,7 +53,6 @@ local function ServerHop()
     end
 end
 
--- UPDATE CHARACTER
 local function UpdateAll()
     Character = LocalPlayer.Character
     if Character then
@@ -70,11 +68,9 @@ LocalPlayer.CharacterAdded:Connect(function()
     UpdateAll()
 end)
 
--- MAIN LOOP
 RunService.RenderStepped:Connect(function()
     if not Running then return end
 
-    -- ✅ FIXED AUTO SERVER HOP
     local Now = tick()
     if Now - getgenv().LastServerHop >= ServerHopInterval then
         getgenv().LastServerHop = Now
@@ -122,7 +118,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ANTI AFK
 LocalPlayer.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
